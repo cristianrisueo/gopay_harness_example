@@ -1,0 +1,886 @@
+{
+	"info": {
+		"_postman_id": "61eef04b-fead-4ac8-aa87-802af8e58f70",
+		"name": "GoPay API - Complete Collection",
+		"description": "Complete API collection for GoPay - A high-performance P2P payment system with multi-currency support, credit system, staking, and liquidity pools",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17000732"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Verify API and database health"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.user) {",
+									"        pm.collectionVariables.set('user_id', response.data.user.id);",
+									"    }",
+									"    if (response.data && response.data.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"cristianrisueo@gmail.com\",\n  \"password\": \"12345678\",\n  \"username\": \"Cristian Risueño\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user and automatically create a wallet with zero balances"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.data.token);",
+									"    }",
+									"    if (response.data && response.data.user) {",
+									"        pm.collectionVariables.set('user_id', response.data.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"cristianrisueo@gmail.com\",\n  \"password\": \"12345678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password to get JWT token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						},
+						"description": "Get authenticated user's profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/search?q=te",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "te",
+									"description": "Search query (email or full name)"
+								}
+							]
+						},
+						"description": "Search users by email or full name (exact match)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"cristianrisueo\",\n  \"email\": \"cristianrisueo@gmail.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						},
+						"description": "Update authenticated user's profile (full_name only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						},
+						"description": "Delete authenticated user's account (soft delete)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Get My Wallet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/wallet/balance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"wallet",
+								"balance"
+							]
+						},
+						"description": "Get authenticated user's wallet with all currency balances"
+					},
+					"response": []
+				},
+				{
+					"name": "Deposit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"description": "Required. A new UUID per deposit or withdrawal intent, shared by deposits and withdrawals of the user. {{$guid}} generates a new one on every send; to test a retry, replace it with a fixed UUID and send the request twice."
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"2000.00\",\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wallet/deposit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"wallet",
+								"deposit"
+							]
+						},
+						"description": "Deposit funds to wallet (EUR, USD, or JPY). Amount: positive, at most 4 decimals and at most 999999999999999.9999. Requires the Idempotency-Key header: the app must reuse the same key in every retry of the same deposit. A retry with a used key and the same operation, amount and currency returns 200 with header Idempotent-Replayed: true and the current wallet, and moves no money; with different data it returns 422 IDEMPOTENCY_KEY_REUSED. Missing or invalid key: 400. Breaking change: the Idempotency-Key header is now mandatory (requests without it get 400), and amounts with more than 4 decimals or above the maximum now get 400 instead of being rounded."
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"description": "Required. A new UUID per deposit or withdrawal intent, shared by deposits and withdrawals of the user. {{$guid}} generates a new one on every send; to test a retry, replace it with a fixed UUID and send the request twice."
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"100.00\",\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/wallet/withdraw",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"wallet",
+								"withdraw"
+							]
+						},
+						"description": "Withdraw funds from wallet (requires sufficient balance). Amount: positive, at most 4 decimals and at most 999999999999999.9999. Requires the Idempotency-Key header: the app must reuse the same key in every retry of the same withdrawal. A retry with a used key and the same operation, amount and currency returns 200 with header Idempotent-Replayed: true and the current wallet, and moves no money, even if the balance no longer covers it; with different data it returns 422 IDEMPOTENCY_KEY_REUSED. Missing or invalid key: 400. Breaking change: the Idempotency-Key header is now mandatory (requests without it get 400), and amounts with more than 4 decimals or above the maximum now get 400 instead of being rounded."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Transfers",
+			"item": [
+				{
+					"name": "P2P Transfer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"description": "Required. A new UUID per send intent. {{$guid}} generates a new one on every send; to test a retry, replace it with a fixed UUID and send the request twice."
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"receiver_id\": \"48b0e8d2-9c5a-4f3e-8d7f-1a2b3c4d5e6f\",\n  \"amount\": \"10.00\",\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transfer",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transfer"
+							]
+						},
+						"description": "Transfer funds to another user (ACID transaction with SELECT FOR UPDATE). Requires the Idempotency-Key header: the app must reuse the same key in every retry of the same send. A retry with a used key and the same receiver, amount and currency returns 201 with header Idempotent-Replayed: true and moves no money; with different data it returns 422 IDEMPOTENCY_KEY_REUSED. Missing or invalid key: 400."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transfer by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transfer/:transfer_id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transfer",
+								":transfer_id"
+							],
+							"variable": [
+								{
+									"key": "transfer_id",
+									"value": "86d29771-ac5a-4548-9e8d-89b777a138ae"
+								}
+							]
+						},
+						"description": "Get details of a specific transfer"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transfer History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transfer/history?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transfer",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Maximum number of results (default: 50)"
+								}
+							]
+						},
+						"description": "Get transfer history (both sent and received transfers)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Credit System",
+			"item": [
+				{
+					"name": "Request Credit (LLM Evaluation)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.id) {",
+									"        pm.collectionVariables.set('credit_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"1000.00\",\n  \"currency\": \"EUR\",\n  \"duration_months\": 12,\n  \"purpose\": \"I want to buy another teddy bear for my neighbour\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/credit/request",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credit",
+								"request"
+							]
+						},
+						"description": "Request a credit with AI-powered GPT-4 evaluation. Returns APPROVED, PENDING, or REJECTED status with risk assessment."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Credit",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/credit/:credit_id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credit",
+								":credit_id"
+							],
+							"variable": [
+								{
+									"key": "credit_id",
+									"value": "{{credit_id}}",
+									"description": "Credit ID"
+								}
+							]
+						},
+						"description": "Get details of a specific credit (owned by authenticated user)"
+					},
+					"response": []
+				},
+				{
+					"name": "List My Credits",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/credit/my",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credit",
+								"my"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"description": "Filter by status: PENDING, APPROVED, ACTIVE, REJECTED, PAID, DEFAULTED",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all credits for authenticated user with optional status filter"
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Approved Credit",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/credit/:credit_id/accept",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credit",
+								":credit_id",
+								"accept"
+							],
+							"variable": [
+								{
+									"key": "credit_id",
+									"value": "{{credit_id}}",
+									"description": "Credit ID"
+								}
+							]
+						},
+						"description": "Accept an approved credit. Locks collateral (2x loan amount) and disburses loan to wallet."
+					},
+					"response": []
+				},
+				{
+					"name": "Make Payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/credit/:credit_id/payment",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credit",
+								":credit_id",
+								"payment"
+							],
+							"variable": [
+								{
+									"key": "credit_id",
+									"value": "{{credit_id}}",
+									"description": "Credit ID"
+								}
+							]
+						},
+						"description": "Make next scheduled payment for active credit. Automatically deducts from wallet."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Credit History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/credit/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credit",
+								"history"
+							]
+						},
+						"description": "Get authenticated user's credit history and credit score metrics"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Liquidity Pools",
+			"item": [
+				{
+					"name": "Get All Pool Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pool/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pool",
+								"stats"
+							]
+						},
+						"description": "Get statistics for all currency pools (EUR, USD, JPY) - No authentication required"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pool Stats (EUR)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pool/stats/EUR",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pool",
+								"stats",
+								"EUR"
+							]
+						},
+						"description": "Get EUR pool statistics (liquidity, utilization, APY) - No authentication required"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pool Stats (USD)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pool/stats/USD",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pool",
+								"stats",
+								"USD"
+							]
+						},
+						"description": "Get USD pool statistics - No authentication required"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pool Stats (JPY)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pool/stats/JPY",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pool",
+								"stats",
+								"JPY"
+							]
+						},
+						"description": "Get JPY pool statistics - No authentication required"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Interest History (EUR)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pool/interest-history/EUR?days=365",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pool",
+								"interest-history",
+								"EUR"
+							],
+							"query": [
+								{
+									"key": "days",
+									"value": "365"
+								}
+							]
+						},
+						"description": "Get historical interest distributions for EUR pool - No authentication required"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Staking",
+			"item": [
+				{
+					"name": "Create Staking Position",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.position_id) {",
+									"        pm.collectionVariables.set('position_id', response.data.position_id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"1900.00\",\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/staking/stake",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"staking",
+								"stake"
+							]
+						},
+						"description": "Create a 1-year locked staking position (minimum 1000 units). Earns interest based on pool APY."
+					},
+					"response": []
+				},
+				{
+					"name": "Increase Stake",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"90.00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/staking/:position_id/increase",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"staking",
+								":position_id",
+								"increase"
+							],
+							"variable": [
+								{
+									"key": "position_id",
+									"value": "7bbb533a-137f-4940-87e8-16094ecd10fc",
+									"description": "Staking position ID"
+								}
+							]
+						},
+						"description": "Add more funds to an existing active staking position"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Positions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/staking/positions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"staking",
+								"positions"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"description": "Filter by status: ACTIVE, COMPLETED, WITHDRAWN",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all staking positions for authenticated user with optional status filter"
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Stake",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/staking/:position_id/withdraw",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"staking",
+								":position_id",
+								"withdraw"
+							],
+							"variable": [
+								{
+									"key": "position_id",
+									"value": "f7021131-fc18-407a-98d9-e5e665fea071",
+									"description": "Staking position ID"
+								}
+							]
+						},
+						"description": "Withdraw staking position after lockup period expires. Returns principal + accumulated interest."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "credit_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "position_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

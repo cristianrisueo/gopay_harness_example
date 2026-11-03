@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS uq_transfers_sender_idempotency_key;

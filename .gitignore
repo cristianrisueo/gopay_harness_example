@@ -1,0 +1,128 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# IDE - JetBrains (GoLand, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Vim
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build output
+/bin/
+/dist/
+/build/
+/out/
+
+# API documentation generated
+docs/swagger.json
+docs/swagger.yaml
+
+# Testing
+coverage.html
+coverage.out
+.coverage
+
+# Docker
+docker-compose.override.yml
+
+# Migration tracking (optional - si usas alguna tool específica)
+# *.migration.lock
+
+# Air live reload (si lo usas en desarrollo)
+.air.toml
+tmp/
+
+# Certificates and keys (CRITICAL - nunca commitear)
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Backup files
+*.bak
+*.backup
+
+# Compiled Object files
+*.o
+*.a
+
+# Go build cache
+.cache/
+
+# Claude Code personal files
+.claude/settings.local.json
+CLAUDE.local.md
+
+# ROADMAP FILES
+GOPAY_V2_ROADMAP.md
+GOPLAY_V2_ROADMAP_IMPLEMENTATION.md
+
+# The task in flight: ephemeral, published as the PR body by /ship
+specs/plan.md
+specs/sprints/

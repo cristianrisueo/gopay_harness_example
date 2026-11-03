@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16.3
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gopay}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-gopay}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gopay-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gopay-app
+    environment:
+      ENV: ${ENV:-production}
+      PORT: ${PORT:-8080}
+      DB_DSN: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-gopay}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - gopay-network
+    restart: unless-stopped
+
+networks:
+  gopay-network:
+    driver: bridge
+
+volumes:
+  db-data:

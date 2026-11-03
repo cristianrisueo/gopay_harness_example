@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+tmp/
+
+# Air (hot reload)
+.air.toml
+tmp
+
+# Documentation
+*.md
+!README.md
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Test files
+*_test.go
+testdata/
+
+# Coverage
+coverage.txt
+*.coverprofile
+
+# Vendor (if used)
+vendor/
+
+# Logs
+*.log
+
+# Postman collections
+postman_collection.json
