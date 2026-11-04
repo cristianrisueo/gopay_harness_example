@@ -1,10 +1,65 @@
-# GoPay
+# GoPay · Claude Code harness
 
-> A high-performance P2P payment system supporting multi-currency transfers with ACID transaction guarantees
+> A Go P2P payments API used as the reference project for my AI-assisted development pipeline: Claude writes the code, I own the specification, the decisions and the evidence.
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go](https://img.shields.io/badge/Go-see%20go.mod-00ADD8?style=flat&logo=go)](go.mod)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?style=flat&logo=postgresql)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+This branch has two parts:
+
+1. **The harness** (`CLAUDE.md` and `.claude/`): hooks and skills that turn my method into rules Claude Code cannot skip.
+2. **GoPay**, the project I built and tested the method on. It is a proof of concept, not a production system.
+
+The full method, with diagrams, prompts and the reviewer skill, is in **[docs/Pipeline_EN.pdf](docs/Pipeline_EN.pdf)** ([Spanish version](docs/Pipeline_ES.pdf)).
+
+## The harness
+
+### How a task flows
+
+| Step                 | Who                      | What                                                                                                                                      |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 · Explore          | Claude Code · `/explore` | Writes `specs/project-specs.md` from what the code does: every business rule as a requirement with a stable ID. Runs once per repository. |
+| 2 · Review the task  | Me + reviewer chat       | I answer what must never fail; the reviewer formats the PM's task as a brief.                                                             |
+| 3 · Plan             | Claude Code · `/propose` | Interviews me and writes `specs/plan.md`, where every acceptance criterion has its `Verified by`.                                         |
+| 4 · Approve the plan | Me + reviewer chat       | My verdict first, then the reviewer's. Two rounds at most. **Human checkpoint.**                                                          |
+| 5 · Build            | Claude Code · `/build`   | One sprint per session on `feat/<id>`, tests first, raw red and green output in the report.                                               |
+| 6 · Audit            | Claude Code · `/audit`   | A clean session judges the plan, the sprints and the diff: proven, claimed only, or missing.                                              |
+| 7 · Check it myself  | Me + reviewer chat       | The reviewer writes a regression script from the audit; I run it. **Human checkpoint.**                                                   |
+| 8 · Close            | Claude Code · `/ship`    | Squash merge with the evidence in the commit (local mode) or the PR (remote mode).                                                        |
+
+Whoever builds never grades itself: Claude Code builds, a clean session audits, a separate Claude chat reviews with me, and the final check is mine.
+
+### What enforces it
+
+| Piece                         | What it does                                                                                                                                                                                                                                             |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/hooks/guard.sh`      | Runs before every action. Blocks wiping the local database, commits and pushes to `main`, force pushes, application code outside `feat/*` and edits to migrations already on `main`. If it cannot read a call, it blocks. Tested by `make harness-test`. |
+| `.claude/hooks/format.sh`     | `gofmt` and `go vet` on every edited Go file.                                                                                                                                                                                                            |
+| `.claude/hooks/stop-tests.sh` | On `feat/*`, Claude cannot finish while `make test` is red.                                                                                                                                                                                              |
+| `.claude/skills/`             | `explore`, `propose`, `build`, `audit`, `ship`: one skill per step.                                                                                                                                                                                      |
+| `.claude/settings.json`       | Permissions, sandbox and hook wiring. Sessions start in plan mode.                                                                                                                                                                                       |
+| `specs/`                      | `project-specs.md` (versioned) plus the task in flight (`plan.md`, `sprints/`), which ends up in the commit or the PR, never on `main` as files.                                                                                                         |
+
+**Two modes, decided once:** with no `origin` remote the harness works locally and `/ship` squash-merges after my approval; with `origin` on GitHub, `/ship` opens a PR and merges it after an approved `/audit`.
+
+### The reviewer: a separate Claude chat
+
+I recommend running the `reviewer` skill in a Claude chat separate from Claude Code, as the validator of everything Claude Code produces. It loads the specs, formats briefs, helps with the hard decisions, audits the plan and writes the regression script, and it never writes application code. Its full text is in the appendix of the PDF.
+
+### Try it
+
+Requirements: [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), Go, make, Docker (local database and integration tests), jq (used by the hooks) and, for remote mode only, the GitHub CLI.
+
+1. Clone this branch: `git clone -b harness-test https://github.com/cristianrisueo/gopay.git`
+2. Open Claude Code at the repository root and run `/explore` once.
+3. Pick a task and follow steps 2 to 8, with the reviewer skill in a separate Claude chat.
+
+`CLAUDE.md` and the reviewer talk to me in Spanish; files, code and commits are in English. Change their Language section to use them in English.
+
+---
+
+# The project: GoPay
 
 ## Overview
 
@@ -83,6 +138,11 @@ gopay/
 ├── migrate/
 │   ├── migrations/              # SQL migration files
 │   └── seed/                    # Database seeding scripts
+├── .claude/                     # Harness: hooks, skills and settings
+├── specs/                       # project-specs.md, plus the task in flight
+├── docs/                        # Pipeline_EN.pdf, Pipeline_ES.pdf
+├── CLAUDE.md                    # How Claude Code works in this repo
+├── Makefile                     # Verbs used by the harness and by humans
 └── docker-compose.yml           # PostgreSQL setup
 ```
 
@@ -125,7 +185,7 @@ GoPay follows a **hybrid approach** to code organization:
 
 ## Prerequisites
 
-- **Go**: 1.21 or higher
+- **Go**: the version in `go.mod`
 - **PostgreSQL**: 16 or higher
 - **Docker**: (optional, for containerized PostgreSQL)
 - **Air**: (optional, for hot reload during development)
@@ -135,7 +195,7 @@ GoPay follows a **hybrid approach** to code organization:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/gopay.git
+git clone -b harness-test https://github.com/cristianrisueo/gopay.git
 cd gopay
 ```
 
@@ -203,7 +263,7 @@ go mod download
 
 ```bash
 # Install Air
-go install github.com/cosmtrek/air@latest
+go install github.com/air-verse/air@latest
 
 # Run with Air
 air
@@ -392,14 +452,14 @@ lost connection). A retry never moves money twice. The key is unique per user an
 deposits and withdrawals; it is independent of the keys used for transfers. It is stored with
 the movement in `wallet_movements`, so the guarantee lasts as long as the movement exists.
 
-| Situation | Response |
-|---|---|
-| New key | `200 OK`, the deposit or withdrawal is applied and recorded. |
-| Key already used, same operation, amount and currency | `200 OK` with header `Idempotent-Replayed: true`. No money is moved. Body: the current wallet. Amounts are compared as decimals: `"10"` and `"10.0000"` are the same. This holds even if the balance no longer covers a replayed withdrawal: the replay is resolved before the balance check. |
-| Key already used with a different operation (deposit/withdraw), amount or currency | `422 Unprocessable Entity`, code `IDEMPOTENCY_KEY_REUSED`. No money is moved. |
-| Header missing, or not a UUID in canonical form (`8-4-4-4-12`, any case) | `400 Bad Request`. No money is moved. |
-| The original request failed (validation, insufficient balance, missing wallet...) | The key is not registered: a retry with the same key is executed normally. |
-| Several requests with the same key at the same time | Only one moves money; the others wait for it and get the replay response. `409 Conflict` is only a safety net if the original cannot be read. |
+| Situation                                                                          | Response                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New key                                                                            | `200 OK`, the deposit or withdrawal is applied and recorded.                                                                                                                                                                                                                                  |
+| Key already used, same operation, amount and currency                              | `200 OK` with header `Idempotent-Replayed: true`. No money is moved. Body: the current wallet. Amounts are compared as decimals: `"10"` and `"10.0000"` are the same. This holds even if the balance no longer covers a replayed withdrawal: the replay is resolved before the balance check. |
+| Key already used with a different operation (deposit/withdraw), amount or currency | `422 Unprocessable Entity`, code `IDEMPOTENCY_KEY_REUSED`. No money is moved.                                                                                                                                                                                                                 |
+| Header missing, or not a UUID in canonical form (`8-4-4-4-12`, any case)           | `400 Bad Request`. No money is moved.                                                                                                                                                                                                                                                         |
+| The original request failed (validation, insufficient balance, missing wallet...)  | The key is not registered: a retry with the same key is executed normally.                                                                                                                                                                                                                    |
+| Several requests with the same key at the same time                                | Only one moves money; the others wait for it and get the replay response. `409 Conflict` is only a safety net if the original cannot be read.                                                                                                                                                 |
 
 ### Transfer Endpoints
 
@@ -425,14 +485,14 @@ presses "send" and reuses that same key in every retry of that send (timeouts, l
 connection). A retry never moves money twice. The key is unique per sender and is stored
 with the transfer, so the guarantee lasts as long as the transfer exists.
 
-| Situation | Response |
-|---|---|
-| New key | `201 Created`, the transfer is executed. |
-| Key already used, same receiver, amount and currency | `201 Created` with header `Idempotent-Replayed: true`. No money is moved. Body: the original transfer (same `transfer_id`, amount, receiver, currency and `created_at`) and the current balances. Amounts are compared as decimals: `"10"` and `"10.00"` are the same. |
-| Key already used with a different receiver, amount or currency | `422 Unprocessable Entity`, code `IDEMPOTENCY_KEY_REUSED`. No money is moved. |
-| Header missing, or not a UUID in canonical form (`8-4-4-4-12`, any case) | `400 Bad Request`. No money is moved. |
-| The original request failed (validation, insufficient balance, unknown receiver...) | The key is not registered: a retry with the same key is executed normally. |
-| Several requests with the same key at the same time | Only one moves money; the others wait for it and get the replay response. `409 Conflict` is only a safety net if the original cannot be read. |
+| Situation                                                                           | Response                                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New key                                                                             | `201 Created`, the transfer is executed.                                                                                                                                                                                                                               |
+| Key already used, same receiver, amount and currency                                | `201 Created` with header `Idempotent-Replayed: true`. No money is moved. Body: the original transfer (same `transfer_id`, amount, receiver, currency and `created_at`) and the current balances. Amounts are compared as decimals: `"10"` and `"10.00"` are the same. |
+| Key already used with a different receiver, amount or currency                      | `422 Unprocessable Entity`, code `IDEMPOTENCY_KEY_REUSED`. No money is moved.                                                                                                                                                                                          |
+| Header missing, or not a UUID in canonical form (`8-4-4-4-12`, any case)            | `400 Bad Request`. No money is moved.                                                                                                                                                                                                                                  |
+| The original request failed (validation, insufficient balance, unknown receiver...) | The key is not registered: a retry with the same key is executed normally.                                                                                                                                                                                             |
+| Several requests with the same key at the same time                                 | Only one moves money; the others wait for it and get the replay response. `409 Conflict` is only a safety net if the original cannot be read.                                                                                                                          |
 
 Response includes updated balances:
 
@@ -719,8 +779,11 @@ This prevents race conditions and ensures:
 ### Running Tests
 
 ```bash
-# Run all tests
-go test ./...
+# Run all tests (what the harness uses: go test -race -count=1 ./...)
+make test
+
+# Format and vet checks, plus the harness's own tests
+make check
 
 # Run tests with coverage
 go test -cover ./...
@@ -747,7 +810,7 @@ migrate create -ext sql -dir migrate/migrations -seq migration_name
 # Apply migrations
 make migrate-up
 
-# Rollback migrations
+# Rollback migrations (by hand only: the harness blocks the agent from running it)
 make migrate-down
 
 # Check migration version
@@ -861,31 +924,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Quick Links
 
-- 📚 [CLAUDE.md](CLAUDE.md) - Development guidelines and architecture decisions
+- 📚 [CLAUDE.md](CLAUDE.md) - How Claude Code works in this repo (the harness)
+- 🧭 [docs/Pipeline_EN.pdf](docs/Pipeline_EN.pdf) - The full method: steps, rules, prompts and the reviewer skill
 - 🧪 [CREDIT_API_TESTS.md](CREDIT_API_TESTS.md) - Comprehensive credit system testing guide
 - 🌱 [migrate/seed/README.md](migrate/seed/README.md) - Database seeding documentation
 - 🔑 **API Base URL**: `http://localhost:8080`
-
----
-
-**Version**: 3.1.0
-**Status**: Production-ready with clean architecture
-**Last Updated**: November 15, 2025
-
-### Recent Updates (v3.1.0)
-
-- ✅ Major refactoring: `main.go` reduced from 174 to 56 lines (68% reduction)
-- ✅ New `pkg/app/` package for reusable infrastructure (config, server lifecycle)
-- ✅ Separation of concerns: generic infrastructure vs. domain-specific logic
-- ✅ Improved maintainability and testability
-- ✅ Enhanced code organization following "Simplicity First" principle
-
-### Previous Updates (v3.0.0)
-
-- ✅ Complete database seeding infrastructure (`migrate/seed/`)
-- ✅ New `make seed` and `make reset-db` commands
-- ✅ Pre-populated test data with 3 users and wallets
-- ✅ Bug fixes for LLM response serialization/deserialization
-- ✅ Account age calculation for credit evaluation
-- ✅ End-to-end testing completed and verified
-- ✅ Comprehensive CHANGELOG and documentation
